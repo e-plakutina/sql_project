@@ -1,0 +1,32 @@
+services:
+    db:
+        image: mysql:8.0
+        ports:
+            - "3306:3306"
+        volumes:
+            - 'mysql_data:/var/lib/mysql'
+        command: --default-authentication-plugin=mysql_native_password
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: witcher
+            MYSQL_ROOT_PASSWORD: root
+        healthcheck:
+            test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+            timeout: 20s
+            retries: 10
+
+    app:
+        container_name: myapp
+        volumes:
+            -   .:/app
+        links:
+            - "db"
+        build: .
+        ports:
+            - "4000:4000"
+        depends_on:
+            db:
+                condition: service_healthy
+
+volumes:
+    mysql_data:
